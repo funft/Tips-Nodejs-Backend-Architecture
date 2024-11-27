@@ -8,6 +8,7 @@ const server = app.listen(PORT, () => {
 process.on('SIGINT', () => {
     server.close(() => {
         console.log('Server is closed');
+        return process.exit(0);
     });
     // Báo lỗi khi server bị đóng
     // notify.send('ping...')
