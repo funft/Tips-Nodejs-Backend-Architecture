@@ -17,9 +17,6 @@ const pro = {
         url: process.env.PRO_MONGODB_URL
     }
 }
-if (process.env.NODE_ENV === 'production') {
-    module.exports = pro
-}
-else {
-    module.exports = dev
-}
+
+const config = { dev, pro }
+module.exports = config[process.env.NODE_ENV] || config.dev
