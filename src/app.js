@@ -4,27 +4,23 @@ const helmet = require('helmet');
 const compression = require('compression');
 const app = express();
 const { checkConnect } = require('./helpers/check.connect')
+const bodyParser = require('body-parser');
 
 // init middleware
 app.use(morgan('dev'));
 app.use(helmet())
 app.use(compression())
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded())
+// parse application/json
+app.use(bodyParser.json())
 
 // init db
 require('./dbs/init.mongodb')
 checkConnect()
 
 // init routes
-app.get('/app', (req, res) => {
-    const strCompressed = 'Hello World <>';
-
-    res.status(200).json(
-        {
-            message: "success",
-            metadata: strCompressed.repeat(10000)
-        }
-    )
-});
+app.use('/v1/api', require('./routes/index'));
 
 // init error handler
 
