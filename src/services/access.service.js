@@ -2,6 +2,7 @@
 const shopModel = require('../models/shop.model');
 const KeyTokenService = require('./keyToken.service');
 const authUtils = require('../auths/authUtils');
+const { getIntoData } = require('../utils/index');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const ROLE_SHOP = {
@@ -67,9 +68,9 @@ class AccessService {
                 return {
                     code: '20000',
                     metadata: {
+                        shop: getIntoData(newShop, ['name']),
                         accessToken: tokens.accessToken,
                         refreshToken: tokens.refreshToken,
-                        shop: newShop
                     }
                 }
             }
