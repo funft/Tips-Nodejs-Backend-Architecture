@@ -60,7 +60,6 @@ class AccessService {
             // chuyển publicKey lưu ở dạng json/string trong db về obj để verify
             const publicKeyObject = await crypto.createPublicKey(publicKeyString)
             authUtils.verifyToken(tokens.accessToken, publicKeyObject)
-            console.log('chayj trwocs verirfy');
             return {
                 code: '20000',
                 metadata: {

@@ -1,3 +1,4 @@
+const { CREATED } = require('../core/success.response');
 const AccessService = require('../services/access.service');
 
 class AccessController {
@@ -6,9 +7,7 @@ class AccessController {
         // rồi thì trả về thông báo
         // nếu chưa thì create, tạo accestoken, refreshtoken
         const result = await AccessService.signUp(req.body.name, req.body.email, req.body.password);
-        return res.status(201).json(
-            result
-        )
+        new CREATED('register success', result).send(res)
     }
 }
 
