@@ -7,6 +7,8 @@ const getIntoData = (obj = {}, fields = []) => {
 
 }
 
+
+
 module.exports = {
-    getIntoData
+    getIntoData,
 }
