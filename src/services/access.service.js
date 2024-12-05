@@ -1,11 +1,12 @@
 'use strict'
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const shopModel = require('../models/shop.model');
 const KeyTokenService = require('./keyToken.service');
 const authUtils = require('../auths/authUtils');
 const { getIntoData } = require('../utils/index');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
-const { BadRequestError } = require('../core/error.response');
+const { BadRequestError, AuthFailureError } = require('../core/error.response');
+const { findByEmail } = require('./shop.service')
 const ROLE_SHOP = {
     SHOP: '0001',
     WRITE: '0002',
@@ -14,6 +15,31 @@ const ROLE_SHOP = {
 
 
 class AccessService {
+    static signIn = async (email, password, refreshToken = null) => {
+        const shop = await findByEmail(email)
+        if (!shop) {
+            throw new BadRequestError('Invalid email or password')
+        }
+
+        const isMatch = await bcrypt.compare(password, shop.password)
+        if (!isMatch) {
+            throw new AuthFailureError('Invalid email or password')
+        }
+        const privateKey = await crypto.randomBytes(64).toString('hex')
+        const publicKey = await crypto.randomBytes(64).toString('hex')
+        const tokens = await authUtils.createTokenPairHs256({ userId: shop._id, email }, privateKey)
+        await KeyTokenService.createKeyToken({ userId: shop._id, publicKey, privateKey, refreshToken: tokens.refreshToken })
+        return {
+            metadata: {
+                shop: getIntoData({ obj: shop, fields: ['name', "email", "roles"] }),
+                tokens: {
+                    accessToken: tokens.accessToken,
+                    refreshToken: tokens.refreshToken
+                }
+            }
+        }
+    }
+
     static signUp = async (name, email, password) => {
         // check tồn tại email
         const existEmail = await shopModel.findOne({
@@ -44,7 +70,7 @@ class AccessService {
                 },
             },
             )
-            const publicKeyString = await KeyTokenService.createKeyToken(newShop._id, publicKey)
+            const publicKeyString = await KeyTokenService.createKeyToken({ userId: newShop._id, publicKey, privateKey })
 
             if (!publicKeyString) {
                 return {
@@ -63,7 +89,7 @@ class AccessService {
             return {
                 code: '20000',
                 metadata: {
-                    shop: getIntoData(newShop, ['name']),
+                    shop: getIntoData({ obj: newShop, fields: ['name'] }),
                     accessToken: tokens.accessToken,
                     refreshToken: tokens.refreshToken,
                 }

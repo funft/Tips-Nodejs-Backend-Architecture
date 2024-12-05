@@ -27,14 +27,12 @@ app.use('/v1/api', require('./routes/index'));
 // handle 404 because other status is handled in routes
 app.use((req, res, next) => {
     const error = new Error('Not Found');
-    console.log('run1');
     error.code = 404;
     next(error)
 })
 
 app.use((error, req, res, next) => {
     const statusCode = error.code || 500
-    console.log('run2');
     return res.status(statusCode).json({
         message: error.message || 'Internal Server Error',
         status: 'error',

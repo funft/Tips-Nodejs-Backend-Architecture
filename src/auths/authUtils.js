@@ -23,6 +23,21 @@ const createTokenPair = async (payload, privateKey) => {
     }
 }
 
+const createTokenPairHs256 = async (payload, privateKey) => {
+    const accessToken = jwt.sign(payload, privateKey, {
+        algorithm: 'HS256',
+        expiresIn: '1d',
+    })
+    const refreshToken = jwt.sign(payload, privateKey, {
+        algorithm: 'HS256',
+        expiresIn: '7d',
+    })
+    return {
+        accessToken,
+        refreshToken
+    }
+}
+
 const verifyToken = (token, publicKey) => {
     jwt.verify(token, publicKey, {
         algorithm: 'RS256'
@@ -42,5 +57,6 @@ const verifyToken = (token, publicKey) => {
 
 module.exports = {
     createTokenPair,
+    createTokenPairHs256,
     verifyToken
 }
