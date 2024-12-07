@@ -2,14 +2,16 @@
 
 const STATUS_CODE = {
     FORBIDDEN: 401,
-    CONFLICT: 409,
     UNAUTHORIZED: 403,
+    CONFLICT: 409,
+    NOT_FOUND: 404
 }
 
 const REASON_CODE = {
     FORBIDDEN: 'Bad request error',
-    CONFLICT: 'Conflict error',
     UNAUTHORIZED: 'Unauthorized error',
+    CONFLICT: 'Conflict error',
+    NOT_FOUND: 'Not found error'
 }
 
 class ErrorResponse extends Error {
@@ -31,6 +33,12 @@ class BadRequestError extends ErrorResponse {
     }
 }
 
+class NotFoundError extends ErrorResponse {
+    constructor(message = REASON_CODE.NOT_FOUND, code = STATUS_CODE.NOT_FOUND) {
+        super(message, code)
+    }
+}
+
 class AuthFailureError extends ErrorResponse {
     constructor(message = REASON_CODE.UNAUTHORIZED, code = STATUS_CODE.UNAUTHORIZED) {
         super(message, code)
@@ -40,5 +48,6 @@ class AuthFailureError extends ErrorResponse {
 module.exports = {
     ConflictRequestError,
     BadRequestError,
-    AuthFailureError
+    AuthFailureError,
+    NotFoundError
 }

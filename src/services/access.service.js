@@ -15,6 +15,9 @@ const ROLE_SHOP = {
 
 
 class AccessService {
+    static logout = async (keyStoreId) => {
+        return await KeyTokenService.removeKeyToken({ keyStoreId })
+    }
     static signIn = async (email, password, refreshToken = null) => {
         const shop = await findByEmail(email)
         if (!shop) {
@@ -27,8 +30,9 @@ class AccessService {
         }
         const privateKey = await crypto.randomBytes(64).toString('hex')
         const publicKey = await crypto.randomBytes(64).toString('hex')
-        const tokens = await authUtils.createTokenPairHs256({ userId: shop._id, email }, privateKey)
+        const tokens = await authUtils.createTokenPairHs256({ userId: shop._id, email }, privateKey, publicKey)
         await KeyTokenService.createKeyToken({ userId: shop._id, publicKey, privateKey, refreshToken: tokens.refreshToken })
+        console.log('tokens', tokens);
         return {
             metadata: {
                 shop: getIntoData({ obj: shop, fields: ['name', "email", "roles"] }),

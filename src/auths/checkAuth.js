@@ -1,6 +1,10 @@
 'use strict'
+const jwt = require('jsonwebtoken')
 const { HEADER } = require('../constants/index')
+const { BadRequestError } = require('../core/error.response')
 const { findById } = require('../services/apikey.service')
+const shopService = require('../services/shop.service.js')
+const KeyTokenService = require('../services/keyToken.service.js')
 
 const apiKey = async (req, res, next) => {
     try {
@@ -52,14 +56,7 @@ const checkPermission = (permission) => {
     }
 }
 
-
-const handleError = (fn) => {
-    return (req, res, next) => {
-        fn(req, res, next).catch(err => next(err))
-    }
-}
 module.exports = {
     apiKey,
     checkPermission,
-    handleError
 }

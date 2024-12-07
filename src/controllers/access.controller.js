@@ -1,10 +1,15 @@
-const { CREATED } = require('../core/success.response');
+const { CREATED, OK } = require('../core/success.response');
 const AccessService = require('../services/access.service');
 
 class AccessController {
+    async logout(req, res) {
+        const result = await AccessService.logout(req.keyStore._id);
+        console.log('result', result);
+        new OK('logout success', result).send(res)
+    }
     async signIn(req, res) {
         const result = await AccessService.signIn(req.body.email, req.body.password, req.body.refreshToken);
-        new CREATED('login success', result).send(res)
+        new OK('login success', result).send(res)
     }
     async signup(req, res) {
         // Check sự tồn tại email

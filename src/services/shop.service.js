@@ -8,6 +8,15 @@ const findByEmail = async (email, select = { name: 1, email: 1, status: 1, roles
     return foundShop;
 }
 
+const findById = async (id, select = { name: 1, email: 1, status: 1, roles: 1 }) => {
+    const foundShop = await shopModel.findOne({
+        _id: id
+    }).select(select).lean();
+    return foundShop;
+}
+
+
 module.exports = {
-    findByEmail
+    findByEmail,
+    findById
 }

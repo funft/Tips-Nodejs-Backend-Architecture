@@ -1,5 +1,9 @@
 'use strict'
 const jwt = require('jsonwebtoken');
+const KeyTokenService = require('../services/keyToken.service');
+const constants = require('../constants');
+const shopService = require('../services/shop.service');
+
 const createTokenPair = async (payload, privateKey) => {
     try {
         const accessToken = jwt.sign(payload, privateKey, {
@@ -23,13 +27,11 @@ const createTokenPair = async (payload, privateKey) => {
     }
 }
 
-const createTokenPairHs256 = async (payload, privateKey) => {
-    const accessToken = jwt.sign(payload, privateKey, {
-        algorithm: 'HS256',
+const createTokenPairHs256 = async (payload, privateKey, publicKey) => {
+    const accessToken = jwt.sign(payload, publicKey, {
         expiresIn: '1d',
     })
     const refreshToken = jwt.sign(payload, privateKey, {
-        algorithm: 'HS256',
         expiresIn: '7d',
     })
     return {
@@ -55,8 +57,38 @@ const verifyToken = (token, publicKey) => {
     })
 }
 
+const authentication = async (req, res, next) => {
+    const userId = req.body.userId
+    if (!userId) {
+        throw new BadRequestError('Miss data')
+    }
+    const keyStore = await KeyTokenService.findByUserId(userId, { publicKey: 1 })
+    console.log('user', keyStore);
+    if (!keyStore) {
+        throw new NotFoundError('User not found')
+    }
+    const token = req.headers[constants.HEADER.AUTHORIZATION]
+    console.log('token', token);
+    if (!token) {
+        throw new BadRequestError('Token is required')
+    }
+
+    // try {
+    const decodedData = await jwt.verify(token, keyStore.publicKey)
+    if (userId !== decodedData.userId) {
+        throw new BadRequestError('Token is invalid')
+    }
+    req.keyStore = keyStore
+    next()
+    // } catch (err) {
+    //     console.log('looix verifyTokenLogout', err);
+    //     throw err
+    // }
+}
+
 module.exports = {
     createTokenPair,
     createTokenPairHs256,
-    verifyToken
+    verifyToken,
+    authentication
 }
