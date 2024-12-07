@@ -1,8 +1,15 @@
-const createTokenPairHs256 = require('./src/auths/authUtils').createTokenPairHs256
-async function test() {
-    const tokens = await createTokenPairHs256({ userId: "123", email: "email" }, 'private', 'public')
-    console.log('tokens', tokens);
-
+const { bodyUpdateParser } = require("./src/utils");
+const data = {
+    a: 1,
+    b: 2,
+    c: {
+        d: 1,
+        e: null,
+        f: {
+            g: 1,
+            h: undefined
+        }
+    }
 }
-
-test()
+console.log(bodyUpdateParser(data));
+// console.log(typeof undefined);

@@ -1,5 +1,6 @@
 'use strict'
 const { model, Schema } = require('mongoose')
+const { default: slugify } = require('slugify')
 
 const DOCUMENT_NAME = 'Product'
 const COLLECTION_NAME = 'products'
@@ -14,6 +15,9 @@ const productSchema = new Schema({
         required: true
     },
     product_description: {
+        type: String,
+    },
+    product_slug: {
         type: String,
     },
     product_price: {
@@ -37,13 +41,35 @@ const productSchema = new Schema({
     product_attributes: {
         type: Schema.Types.Mixed,
         required: true
-    }
+    },
+    // more
+    product_ratingAverage: {
+        type: Number,
+        default: 4.5,
+        min: [1, 'Rating must be above 1.0'],
+        max: [5, 'Rating must be below 5.0'],
+        set: val => Math.round(val * 10) / 10
+    },
+    product_variation: {
+        type: Array,
+        default: []
+    },
+    // ko có tiền tố product để dễ hiểu khi thiết kế, là trường này ko được lấy ra khi truy vấn
+    // đánh index vì trường này hay được truy vấn
+    isDraft: { type: Boolean, default: true, index: true, select: false },
+    isPublished: { type: Boolean, default: false, index: true, select: false },
 
 }, {
     collection: COLLECTION_NAME,
     timestamps: true
 })
-
+// create index
+productSchema.index({ product_name: 'text', product_description: 'text' })
+// run before save() or create()
+productSchema.pre('save', function (next) {
+    this.product_slug = slugify(this.product_name, { lower: true })
+    next()
+})
 
 const clothingSchema = new Schema({
     brand: {

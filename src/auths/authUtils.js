@@ -93,7 +93,7 @@ const authenticationV2 = async (req, res, next) => {
         throw new BadRequestError('Token is invalid')
     }
     req.keyStore = keyStore
-    req.user = decodedData
+    req.shop = decodedData
     next()
 }
 

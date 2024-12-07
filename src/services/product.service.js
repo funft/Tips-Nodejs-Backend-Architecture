@@ -1,19 +1,52 @@
 'use strict'
 const { product, electronic, clothing, furniture } = require('../models/product.model')
 const { BadRequestError, ForbiddenError } = require('../core/error.response')
+const { findAllDraftForShop, publishProduct, unPublishProduct, findAllPublishedForShop, searchProductByUser, findAllProducts, findProduct, updateProduct, updateDetailProduct } = require('../models/repositories/product.repo')
+const { bodyUpdateParser } = require('../utils')
 
 class ProductFactory {
     static ProductTypes = {}
     static registryProductType(type, classRef) {
         this.ProductTypes[type] = classRef
     }
-
     static async createProduct(type, payload) {
         const productType = this.ProductTypes[type]
         if (!productType) {
-            throw new BadRequestError('Invalid product type')
+            throw new BadRequestError(`Invalid product type: ${type}`)
         }
         return new productType(payload).createProduct()
+    }
+    static async updateProduct({ type, productId, productShop, bodyUpdate }) {
+        const productType = this.ProductTypes[type]
+        if (!productType) {
+            throw new BadRequestError(`Invalid product type: ${type}`)
+        }
+        return new productType(bodyUpdate).updateProduct({ productId, productShop, bodyUpdate })
+    }
+    static async publishProduct({ product_shop, product_id }) {
+        return await publishProduct({ product_shop, product_id })
+    }
+    static async unPublishProduct({ product_shop, product_id }) {
+        return await unPublishProduct({ product_shop, product_id })
+    }
+
+    // query
+    static async findAllDraftForShop({ product_shop, limit = 50, skip = 0 }) {
+        const query = { product_shop, isDraft: true }
+        return await findAllDraftForShop({ query, limit, skip })
+    }
+    static async findAllPublishedForShop({ product_shop, limit = 50, skip = 0 }) {
+        const query = { product_shop, isPublished: true }
+        return await findAllPublishedForShop({ query, limit, skip })
+    }
+    static async searchProduct({ keySearch }) {
+        return await searchProductByUser({ keySearch })
+    }
+    static async findAllProduct({ limit = 50, page = 1, filter = { isPublished: true }, sort = 'ctime' }) {
+        return await findAllProducts({ limit, page, filter, sort, select: ['product_name', 'product_price', 'product_thumb'] })
+    }
+    static async findProduct({ productId }) {
+        return await findProduct({ productId, unSelect: ['__v'] })
     }
 }
 
@@ -37,6 +70,10 @@ class Product {
             _id: product_id
         })
     }
+    async updateProduct({ productId }) {
+        console.log('bodyUpdateParser(this)', bodyUpdateParser(this));
+        return await updateDetailProduct({ productId, bodyUpdate: this, model: product })
+    }
 }
 
 class Clothing extends Product {
@@ -54,6 +91,18 @@ class Clothing extends Product {
         }
 
         return newProduct
+    }
+    async updateProduct({ productId, productShop }) {
+        console.log('updateProduct', this);
+        const foundProduct = await clothing.findOne({ _id: productId, product_shop: productShop })
+        if (!foundProduct) {
+            throw new ForbiddenError('Product not found')
+        }
+        if (this.product_attributes) {
+            await updateDetailProduct({ productId, bodyUpdate: this.product_attributes, model: clothing })
+        }
+
+        return await super.updateProduct({ productId })
     }
 }
 class Electronics extends Product {
@@ -90,6 +139,17 @@ class Furniture extends Product {
         }
 
         return newProduct
+    }
+    async updateProduct({ productId, productShop }) {
+        const foundProduct = await furniture.findOne({ _id: productId, product_shop: productShop })
+        if (!foundProduct) {
+            throw new ForbiddenError('Product not found')
+        }
+        if (this.product_attributes) {
+            await updateDetailProduct({ productId, bodyUpdate: this.product_attributes, model: furniture })
+        }
+
+        return await super.updateProduct({ productId })
     }
 }
 
