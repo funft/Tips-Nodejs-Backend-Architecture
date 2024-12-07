@@ -24,10 +24,10 @@ class KeyTokenService {
             return err;
         }
     }
-    static async findByUserId(userId, select = { name: 1, email: 1, status: 1, roles: 1 }) {
+    static async findByUserId(userId) {
         const foundShop = await keyToKenModel.findOne({
-            userId: userId
-        }).select(select).lean();
+            userId: new Types.ObjectId(userId)
+        });
         return foundShop;
     }
 
@@ -36,7 +36,16 @@ class KeyTokenService {
         console.log('result delKey', result);
         return result
     }
-}
 
+    static async removeKeyTokensByUserId({ userId }) {
+        const result = await keyToKenModel.deleteMany({ userId: userId });
+        console.log('result delKey', result);
+        return result
+    }
+
+    static async updateKeyToken({ keyStoreId, refreshToken }) {
+        const result = await keyToKenModel.findOneAndUpdate({ _id: keyStoreId },)
+    }
+}
 
 module.exports = KeyTokenService;

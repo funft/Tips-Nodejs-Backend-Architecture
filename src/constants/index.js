@@ -1,6 +1,7 @@
 const HEADER = {
     API_KEY: 'x-api-key',
-    AUTHORIZATION: 'authorization'
+    AUTHORIZATION: 'authorization',
+    REFRESHTOKEN: 'x-rfresh-key'
 }
 
 module.exports = {

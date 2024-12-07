@@ -45,9 +45,16 @@ class AuthFailureError extends ErrorResponse {
     }
 }
 
+class ForbiddenError extends ErrorResponse {
+    constructor(message = REASON_CODE.FORBIDDEN, code = STATUS_CODE.FORBIDDEN) {
+        super(message, code)
+    }
+}
+
 module.exports = {
     ConflictRequestError,
     BadRequestError,
     AuthFailureError,
-    NotFoundError
+    NotFoundError,
+    ForbiddenError
 }

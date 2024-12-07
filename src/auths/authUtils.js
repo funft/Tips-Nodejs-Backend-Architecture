@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const KeyTokenService = require('../services/keyToken.service');
 const constants = require('../constants');
 const shopService = require('../services/shop.service');
+const { BadRequestError, NotFoundError } = require('../core/error.response');
 
 const createTokenPair = async (payload, privateKey) => {
     try {
@@ -57,6 +58,44 @@ const verifyToken = (token, publicKey) => {
     })
 }
 
+const authenticationV2 = async (req, res, next) => {
+    const userId = req.body.userId
+    if (!userId) {
+        throw new BadRequestError('Miss data')
+    }
+    const keyStore = await KeyTokenService.findByUserId(userId)
+    if (!keyStore) {
+        throw new NotFoundError('User not found')
+    }
+
+    const refreshToken = req.headers[constants.HEADER.REFRESHTOKEN]
+    if (refreshToken) {
+        if (refreshToken !== keyStore.refreshToken) {
+            throw new BadRequestError('Refresh token is invalid')
+        }
+        const decodedData = await jwt.verify(refreshToken, keyStore.privateKey)
+        if (userId !== decodedData.userId) {
+            throw new BadRequestError('Refresh token is invalid')
+        }
+        req.keyStore = keyStore
+        req.refreshToken = refreshToken
+        req.shop = decodedData
+        return next()
+    }
+
+    const token = req.headers[constants.HEADER.AUTHORIZATION]
+    if (!token) {
+        throw new BadRequestError('Token is required')
+    }
+
+    const decodedData = await jwt.verify(token, keyStore.publicKey)
+    if (userId !== decodedData.userId) {
+        throw new BadRequestError('Token is invalid')
+    }
+    req.keyStore = keyStore
+    next()
+}
+
 const authentication = async (req, res, next) => {
     const userId = req.body.userId
     if (!userId) {
@@ -73,22 +112,18 @@ const authentication = async (req, res, next) => {
         throw new BadRequestError('Token is required')
     }
 
-    // try {
     const decodedData = await jwt.verify(token, keyStore.publicKey)
     if (userId !== decodedData.userId) {
         throw new BadRequestError('Token is invalid')
     }
     req.keyStore = keyStore
     next()
-    // } catch (err) {
-    //     console.log('looix verifyTokenLogout', err);
-    //     throw err
-    // }
 }
 
 module.exports = {
     createTokenPair,
     createTokenPairHs256,
     verifyToken,
-    authentication
+    authentication,
+    authenticationV2
 }

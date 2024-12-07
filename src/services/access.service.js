@@ -5,7 +5,7 @@ const shopModel = require('../models/shop.model');
 const KeyTokenService = require('./keyToken.service');
 const authUtils = require('../auths/authUtils');
 const { getIntoData } = require('../utils/index');
-const { BadRequestError, AuthFailureError } = require('../core/error.response');
+const { BadRequestError, AuthFailureError, ForbiddenError } = require('../core/error.response');
 const { findByEmail } = require('./shop.service')
 const ROLE_SHOP = {
     SHOP: '0001',
@@ -15,6 +15,28 @@ const ROLE_SHOP = {
 
 
 class AccessService {
+    static handleRefreshToken = async ({ keyStore, refreshToken, shop }) => {
+        const userId = shop.userId
+        if (keyStore.refreshTokensUsed.includes(refreshToken)) {
+            await KeyTokenService.removeKeyTokensByUserId({ userId: keyStore.userId })
+            throw new ForbiddenError('Sth wrong!Pls sign in')
+        }
+        // tạo cặp AT/ RT mới
+        const tokens = await authUtils.createTokenPairHs256({ userId: userId, email: shop.email }, keyStore.privateKey, keyStore.publicKey)
+        console.log('tokens.refreshToken', tokens.refreshToken);
+        console.log('refreshToken', refreshToken);
+
+
+        keyStore.refreshTokensUsed.push(refreshToken)
+        keyStore.refreshToken = tokens.refreshToken
+        await keyStore.save()
+
+        return {
+            user: { userId: userId, email: shop.email },
+            tokens
+        }
+    }
+
     static logout = async (keyStoreId) => {
         return await KeyTokenService.removeKeyToken({ keyStoreId })
     }
@@ -32,10 +54,9 @@ class AccessService {
         const publicKey = await crypto.randomBytes(64).toString('hex')
         const tokens = await authUtils.createTokenPairHs256({ userId: shop._id, email }, privateKey, publicKey)
         await KeyTokenService.createKeyToken({ userId: shop._id, publicKey, privateKey, refreshToken: tokens.refreshToken })
-        console.log('tokens', tokens);
         return {
             metadata: {
-                shop: getIntoData({ obj: shop, fields: ['name', "email", "roles"] }),
+                shop: getIntoData({ obj: shop, fields: ['_id', 'name', "email", "roles"] }),
                 tokens: {
                     accessToken: tokens.accessToken,
                     refreshToken: tokens.refreshToken

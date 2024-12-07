@@ -1,7 +1,7 @@
 'use strict'
 const shopModel = require('../models/shop.model');
 
-const findByEmail = async (email, select = { name: 1, email: 1, status: 1, roles: 1, password: 1 }) => {
+const findByEmail = async (email, select = { _id: 1, name: 1, email: 1, status: 1, roles: 1, password: 1 }) => {
     const foundShop = await shopModel.findOne({
         email
     }).select(select).lean();
