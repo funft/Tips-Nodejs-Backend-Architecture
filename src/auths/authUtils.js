@@ -59,7 +59,7 @@ const verifyToken = (token, publicKey) => {
 }
 
 const authenticationV2 = async (req, res, next) => {
-    const userId = req.body.userId
+    const userId = req.headers[constants.HEADER.USERID]
     if (!userId) {
         throw new BadRequestError('Miss data')
     }

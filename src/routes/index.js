@@ -8,5 +8,6 @@ routes.use(apiKey)
 routes.use(checkPermission('0000'))
 
 routes.use('/access', require('./access/index'));
+routes.use('/product', require('./product/index'));
 
 module.exports = routes;
