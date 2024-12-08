@@ -3,6 +3,7 @@ const { product, electronic, clothing, furniture } = require('../models/product.
 const { BadRequestError, ForbiddenError } = require('../core/error.response')
 const { findAllDraftForShop, publishProduct, unPublishProduct, findAllPublishedForShop, searchProductByUser, findAllProducts, findProduct, updateProduct, updateDetailProduct } = require('../models/repositories/product.repo')
 const { bodyUpdateParser } = require('../utils')
+const { insertInventory } = require('../models/repositories/inventory.repo')
 
 class ProductFactory {
     static ProductTypes = {}
@@ -65,10 +66,20 @@ class Product {
     }
 
     async createProduct({ product_id }) {
-        return await product.create({
+        const newProduct = await product.create({
             ...this,
             _id: product_id
         })
+        if (newProduct) {
+            insertInventory({
+                productId: newProduct._id,
+                location: 'Unknown',
+                stock: this.product_quantity,
+                shopId: this.product_shop
+            })
+        }
+
+        return newProduct
     }
     async updateProduct({ productId }) {
         console.log('bodyUpdateParser(this)', bodyUpdateParser(this));
