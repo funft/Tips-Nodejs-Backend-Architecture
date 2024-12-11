@@ -8,8 +8,8 @@ const convertToObjectIdMongoDb = (id) => {
 
 const getIntoData = ({ obj = {}, fields = [] }) => {
     return lodash.pick(obj, fields);
-
 }
+
 const getSelectData = (select = []) => {
     return Object.fromEntries(select.map(e => [e, 1]))
 }
@@ -31,11 +31,15 @@ const bodyUpdateParser = (obj = {}) => {
     })
     return final
 }
+const checkExistRecord = async ({ model, filter }) => {
+    return await model.findOne(filter)
+}
 
 module.exports = {
     getIntoData,
     getSelectData,
     getUnSelectData,
     bodyUpdateParser,
-    convertToObjectIdMongoDb
+    convertToObjectIdMongoDb,
+    checkExistRecord
 }

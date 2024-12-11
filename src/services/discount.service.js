@@ -2,9 +2,10 @@
 const { Schema } = require('mongoose')
 const { BadRequestError, ForbiddenError, NotFoundError } = require('../core/error.response')
 const { discount } = require('../models/discount.model')
-const { convertToObjectIdMongoDb } = require('../utils')
+const { convertToObjectIdMongoDb, checkExistRecord } = require('../utils')
 const { findAllProducts } = require('../models/repositories/product.repo')
 const { findAllDiscountUnselect } = require('../models/repositories/discount.repo')
+const { product } = require('../models/product.model')
 
 class DiscountService {
     static async createDiscountCode({
@@ -112,4 +113,103 @@ class DiscountService {
             unSelect: ['__v', 'discount_shopId']
         })
     }
+
+
+    /**
+      products:
+      [
+       {
+            productId: '123',
+            quantity: 2,
+            price: 100,
+            name: 'product 1',
+            shopId: 'shopId'
+      },
+       {
+            productId: '123',
+            quantity: 2,
+            price: 100,
+            name: 'product 1',
+            shopId: 'shopId'
+      }
+      ]
+     */
+    static async getDiscountAmount({ codeId, userId, shopId, products }) {
+        const foundDiscount = await checkExistRecord({
+            model: discount,
+            filter: {
+                discount_code: codeId,
+                discount_shopId: convertToObjectIdMongoDb(shopId)
+            }
+        })
+        if (!foundDiscount) throw new NotFoundError('Discount code not found')
+        const {
+            discount_is_active,
+            discount_start_date,
+            discount_end_date,
+            discount_max_uses,
+            discount_min_order_value,
+            discount_user_used,
+            discount_max_uses_per_user,
+            discount_type,
+            discount_value
+        } = foundDiscount
+
+        if (!discount_is_active) throw new ForbiddenError('Discount code is not active')
+        if (!discount_max_uses) throw new BadRequestError('Discount code are out')
+        if (new Date(discount_start_date) > new Date() || new Date(discount_end_date) < new Date()) {
+            throw new ForbiddenError('Discount code is expired')
+        }
+        let totalOrder = 0
+        if (discount_min_order_value > 0) {
+            // get total
+            totalOrder = products.reduce((acc, cur) => acc + cur.price * cur.quantity, 0)
+            if (totalOrder < discount_min_order_value) throw new ForbiddenError('Total order is not engough')
+        }
+        if (discount_max_uses_per_user > 0) {
+            const userUsedDiscount = discount_user_used.find(e => e.userId === userId)
+            if (userUsedDiscount) throw new ForbiddenError('User used discount code')
+        }
+        // ... check phức tạp nữa, nên dùng Builder Pattern
+
+        if (!product) throw new NotFoundError('Product not found')
+
+
+        const discount = discount_type == 'fixed_amount' ? discount_value : totalOrder * discount_value / 100
+        return {
+            totalOrder,
+            discount,
+            totalPrice: totalOrder - discount
+        }
+    }
+
+    static async deleteDiscountCode({ codeId, shopId }) {
+        return await discount.deleteOne({
+            discount_code: codeId,
+            discount_shopId: convertToObjectIdMongoDb(shopId)
+        })
+    }
+
+    static async cancelDiscountCode({ codeId, userId, shopId }) {
+        const foundDiscount = await checkExistRecord({
+            model: discount,
+            filter: {
+                discount_code: codeId,
+                discount_shopId: convertToObjectIdMongoDb(shopId)
+            }
+        })
+        if (!foundDiscount) throw new NotFoundError('Discount code not found')
+
+        const result = await discount.findOneAndUpdate(foundDiscount._id, {
+            $pull: {
+                discount_user_used: userId
+            },
+            $inc: {
+                discount_uses_count: -1,
+                discount_max_uses: 1
+            }
+        })
+        return result
+    }
 }
+module.exports = DiscountService
