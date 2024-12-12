@@ -7,6 +7,7 @@ routes.use(apiKey)
 // check permission
 routes.use(checkPermission('0000'))
 
+routes.use('/cart', require('./cart/index'));
 routes.use('/product', require('./product/index'));
 routes.use('/access', require('./access/index'));
 

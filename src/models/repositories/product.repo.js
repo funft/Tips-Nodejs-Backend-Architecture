@@ -81,7 +81,7 @@ const unPublishProduct = async ({ product_shop, product_id }) => {
 
 const queryProductForShop = async ({ query, limit = 50, skip = 0 }) => {
     return await product.find(query)
-        .populate('product_shop', 'name email -_id')
+        .populate('product_shop', 'name email _id')
         .skip(skip)
         .limit(limit)
         .exec()

@@ -9,20 +9,21 @@ const cartSchema = new Schema({
     },
     cart_products: { type: Array, default: [] },
     /**
-     * [
-     * {
-     * product_id: ,
-     * shopId:,
-     * product_name:,
-     * product_price:
-     * product_quantity:
-     * }]
+        [
+            {
+                productId: ,
+                shopId:,
+                name:,
+                price:
+                quantity:
+            }
+        ]
      */
     cart_count_product: { type: Number, default: 0 },
     cart_userId: { type: Number, required: true }
 }, {
     collection: 'carts',
-    timeseries: {
+    timestamps: {
         createdAt: 'createdOn',
         updatedAt: 'modifiedOn'
     }

@@ -1,6 +1,7 @@
 'use strict'
 
 const STATUS_CODE = {
+    BAD_REQUEST: 400,
     FORBIDDEN: 401,
     UNAUTHORIZED: 403,
     CONFLICT: 409,
@@ -8,6 +9,7 @@ const STATUS_CODE = {
 }
 
 const REASON_CODE = {
+    BAD_REQUEST: 'Bad request error',
     FORBIDDEN: 'Bad request error',
     UNAUTHORIZED: 'Unauthorized error',
     CONFLICT: 'Conflict error',
@@ -28,7 +30,7 @@ class ConflictRequestError extends ErrorResponse {
 }
 
 class BadRequestError extends ErrorResponse {
-    constructor(message = REASON_CODE.FORBIDDEN, code = STATUS_CODE.FORBIDDEN) {
+    constructor(message = REASON_CODE.BAD_REQUEST, code = STATUS_CODE.BAD_REQUEST) {
         super(message, code)
     }
 }
