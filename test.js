@@ -1,15 +1,4 @@
 const { bodyUpdateParser } = require("./src/utils");
-const data = {
-    a: 1,
-    b: 2,
-    c: {
-        d: 1,
-        e: null,
-        f: {
-            g: 1,
-            h: undefined
-        }
-    }
-}
-console.log(bodyUpdateParser(data));
+const data = [1, 2, [3, [4, [5, 6]], 7], 8]
+console.log(data.flat(2))
 // console.log(typeof undefined);

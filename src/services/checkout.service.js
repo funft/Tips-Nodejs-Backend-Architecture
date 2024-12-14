@@ -4,7 +4,9 @@ const { checkExistRecord } = require("../utils");
 const { BadRequestError, ForbiddenError, NotFoundError } = require('../core/error.response');
 const { checkProductByServer } = require("../models/repositories/product.repo");
 const { getDiscountAmount } = require('../services/discount.service')
-const { cart } = require('../models/cart.model')
+const { cart } = require('../models/cart.model');
+const { acquireLock, releaseLock } = require("./redis.service");
+const orderModel = require("../models/order.model");
 
 class CheckoutService {
     /*
@@ -41,7 +43,7 @@ class CheckoutService {
             ]
         }
     */
-    static async checkoutReview({ userId, shop_order_ids }) {
+    static async checkoutReview({ cartId, userId, shop_order_ids }) {
         const foundCart = await checkExistRecord({
             model: cart,
             filter: {
@@ -99,6 +101,75 @@ class CheckoutService {
             checkout_order
         }
     }
+
+
+    // order
+    static async orderByUser({
+        shop_order_ids,
+        cartId,
+        userId,
+        user_address = {},
+        user_payment = {}
+    }) {
+        const { shop_order_ids_new, checkout_order } = await this.checkoutReview({ cartId, userId, shop_order_ids })
+
+        const products = shop_order_ids_new.flatMap(item => item.item_products)
+        console.log('products::', products);
+        const acquireProduct = []
+        for (let product of products) {
+            const { productId, quantity } = product
+            const keyLock = await acquireLock(productId, quantity, cartId)
+            acquireProduct.push(!!keyLock)
+            if (keyLock) {
+                await releaseLock(keyLock)
+            }
+        }
+
+        if (acquireProduct.includes(false)) throw new BadRequestError('Some product was updated, please visit cart again')
+        const newOrder = await orderModel.create({
+            order_userId: userId,
+            order_checkout: checkout_order,
+            order_shiping: user_address,
+            order_payment: user_payment,
+            order_products: shop_order_ids_new
+        })
+
+        // Nếu order thành công, thì xóa cart
+        if (newOrder) {
+
+        }
+
+        return order
+    }
+
+    /*
+        1> Query Order [ của Users]
+    */
+    static async getOrderByUser({ }) {
+
+    }
+
+    /*
+        1> Query Order using Id [Users]
+    */
+    static async getOneOrderByUser({ }) {
+
+    }
+
+    /*
+        1> Cancel Order [Users]
+    */
+    static async cancelOrderByUser({ }) {
+
+    }
+
+    /*
+        1> Update Order Statús [Shop | Admin]
+    */
+    static async updateOrderStatusByShop({ }) {
+
+    }
+
 }
 
 module.exports = CheckoutService;
