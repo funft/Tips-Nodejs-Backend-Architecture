@@ -11,6 +11,7 @@ const { handleError } = require('./auths/checkAuth');
 app.use(morgan('dev'));
 app.use(helmet())
 app.use(compression())
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded())
 // parse application/json
