@@ -7,6 +7,7 @@ const { findAllProducts } = require('../models/repositories/product.repo')
 const { findAllDiscountUnselect } = require('../models/repositories/discount.repo')
 const { product } = require('../models/product.model')
 
+
 class DiscountService {
     static async createDiscountCode({
         discountName, discountDescription, discountType, discountValue, discountCode, discountStartDate, discountEndDate, discountMaxUses, discountUsesCount, discountUserUsed, discountMaxUsesPerUser,
@@ -32,6 +33,8 @@ class DiscountService {
             throw new BadRequestError('Discount code is already exists')
         }
 
+        console.log('discountShopId', discountShopId);
+        console.log('discountShopId', typeof discountShopId);
         return await discount.create({
             discount_name: discountName,
             discount_description: discountDescription,
@@ -42,7 +45,7 @@ class DiscountService {
             discount_end_date: new Date(discountEndDate),
             discount_max_uses: discountMaxUses,
             discount_uses_count: discountUsesCount,
-            discount_user_used: discountUserUsed,
+            discount_user_used: [discountUserUsed],
             discount_max_uses_per_user: discountMaxUsesPerUser,
             discount_min_order_value: discountMinOrderValue || 0,
             discount_shopId: convertToObjectIdMongoDb(discountShopId),
@@ -157,7 +160,7 @@ class DiscountService {
 
         if (!discount_is_active) throw new ForbiddenError('Discount code is not active')
         if (!discount_max_uses) throw new BadRequestError('Discount code are out')
-        if (new Date(discount_start_date) > new Date() || new Date(discount_end_date) < new Date()) {
+        if (new Date(discount_end_date) < new Date()) {
             throw new ForbiddenError('Discount code is expired')
         }
         let totalOrder = 0
@@ -168,18 +171,18 @@ class DiscountService {
         }
         if (discount_max_uses_per_user > 0) {
             const userUsedDiscount = discount_user_used.find(e => e.userId === userId)
-            if (userUsedDiscount) throw new ForbiddenError('User used discount code')
+            if (userUsedDiscount?.length > discount_max_uses_per_user) throw new ForbiddenError('User used discount code')
         }
         // ... check phức tạp nữa, nên dùng Builder Pattern
 
         if (!product) throw new NotFoundError('Product not found')
 
 
-        const discount = discount_type == 'fixed_amount' ? discount_value : totalOrder * discount_value / 100
+        const discountAmount = discount_type == 'fixed_amount' ? discount_value : totalOrder * discount_value / 100
         return {
             totalOrder,
             discount,
-            totalPrice: totalOrder - discount
+            totalPrice: totalOrder - discountAmount
         }
     }
 

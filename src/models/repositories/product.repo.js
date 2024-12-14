@@ -2,7 +2,7 @@
 
 const { NotFoundError } = require('../../core/error.response')
 const { product, electronic, clothing, furniture } = require('../../models/product.model')
-const { getSelectData, getUnSelectData, bodyUpdateParser } = require('../../utils')
+const { getSelectData, getUnSelectData, bodyUpdateParser, checkExistRecord } = require('../../utils')
 
 const updateProduct = async ({ productId, bodyUpdate }) => {
     const updateProduct = await product.findByIdAndUpdate(productId, bodyUpdateParser(bodyUpdate), { new: true })
@@ -28,7 +28,7 @@ const findAllProducts = async ({ limit, page, filter, sort, select }) => {
         .lean()
     return products
 }
-const findProduct = async ({ productId, unSelect }) => {
+const findProductById = async ({ productId, unSelect }) => {
     return await product.findById(productId)
         .select(getUnSelectData(unSelect))
         .lean()
@@ -87,6 +87,21 @@ const queryProductForShop = async ({ query, limit = 50, skip = 0 }) => {
         .exec()
 }
 
+const checkProductByServer = async ({ products }) => {
+    return await Promise.all(products.map(async product => {
+        const foundProduct = await findProductById({
+            productId: product.productId,
+        })
+        if (foundProduct) {
+            return {
+                price: foundProduct.product_price,
+                quantity: product.quantity,
+                productId: product.productId,
+            }
+        }
+    }))
+}
+
 module.exports = {
     findAllDraftForShop,
     findAllPublishedForShop,
@@ -94,7 +109,8 @@ module.exports = {
     unPublishProduct,
     searchProductByUser,
     findAllProducts,
-    findProduct,
+    findProductById,
     updateProduct,
-    updateDetailProduct
+    updateDetailProduct,
+    checkProductByServer
 }

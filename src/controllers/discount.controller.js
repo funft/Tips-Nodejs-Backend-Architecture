@@ -7,7 +7,7 @@ class DiscountController {
         new CREATED({
             message: 'Discount code created successfully',
             metadata: await DiscountService.createDiscountCode(req.body)
-        })
+        }).send(res)
     }
 }
 

@@ -2,7 +2,7 @@
 const { NotFoundError, BadRequestError } = require('../core/error.response')
 const { cart } = require('../models/cart.model')
 const { checkExistRecord } = require('../utils')
-const { findProduct } = require('./product.service')
+const { findProductById } = require('./product.service')
 
 class CartService {
     static async createUserCart({ userId, product }) {
@@ -75,7 +75,7 @@ class CartService {
     */
     static async addToCartV2({ userId, shop_order_ids }) {
         const { productId, quantity, oldQuantity } = shop_order_ids[0]?.item_products[0]
-        const foundProduct = await findProduct({ productId })
+        const foundProduct = await findProductById({ productId })
         if (!foundProduct) throw new NotFoundError('Product not found')
         // compare
         console.log('foundProduct.product_shop', foundProduct.product_shop);

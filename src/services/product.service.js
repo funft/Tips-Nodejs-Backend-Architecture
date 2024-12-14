@@ -1,7 +1,7 @@
 'use strict'
 const { product, electronic, clothing, furniture } = require('../models/product.model')
 const { BadRequestError, ForbiddenError } = require('../core/error.response')
-const { findAllDraftForShop, publishProduct, unPublishProduct, findAllPublishedForShop, searchProductByUser, findAllProducts, findProduct, updateProduct, updateDetailProduct } = require('../models/repositories/product.repo')
+const { findAllDraftForShop, publishProduct, unPublishProduct, findAllPublishedForShop, searchProductByUser, findAllProducts, findProductById, updateProduct, updateDetailProduct } = require('../models/repositories/product.repo')
 const { bodyUpdateParser } = require('../utils')
 const { insertInventory } = require('../models/repositories/inventory.repo')
 
@@ -47,7 +47,7 @@ class ProductFactory {
         return await findAllProducts({ limit, page, filter, sort, select: ['product_name', 'product_price', 'product_thumb'] })
     }
     static async findProduct({ productId }) {
-        return await findProduct({ productId, unSelect: ['__v'] })
+        return await findProductById({ productId, unSelect: ['__v'] })
     }
 }
 
