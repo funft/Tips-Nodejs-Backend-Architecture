@@ -13,7 +13,6 @@ const REASON_CODE = {
 
 class SuccessResponse {
     constructor({ message, metadata, code = SUCCESS_CODE.OK }) {
-        console.log('code', code);
         this.message = message
         this.code = code
         this.metadata = metadata

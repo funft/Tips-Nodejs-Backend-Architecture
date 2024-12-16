@@ -25,6 +25,7 @@ class KeyTokenService {
         }
     }
     static async findByUserId(userId) {
+        console.log('userId', userId);
         const foundShop = await keyToKenModel.findOne({
             userId: new Types.ObjectId(userId)
         });

@@ -27,7 +27,6 @@ class DiscordServie {
         this.client.login(DISCORD_TOKEN);
     }
     sendToFormatCode({ title, code, message }) {
-        console.log('code', JSON.stringify(code, null, 2));
         const codeMessage = {
             content: message,
             embeds: [

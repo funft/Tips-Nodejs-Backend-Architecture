@@ -13,15 +13,15 @@ app.use(helmet())
 app.use(compression())
 
 // test pub sub redis
-const inventoryServiceTest = require('./tests/inventory.test')
-inventoryServiceTest.init()
-    .then(() => {
-        const productTest = require('./tests/product.test')
-        productTest.purchaseProduct({ productId: 123, quantity: 10 })
-    })
-    .catch((err) => {
-        console.log('Error', err);
-    })
+// const inventoryServiceTest = require('./tests/inventory.test')
+// inventoryServiceTest.init()
+//     .then(() => {
+//         const productTest = require('./tests/product.test')
+//         productTest.purchaseProduct({ productId: 123, quantity: 10 })
+//     })
+//     .catch((err) => {
+//         console.log('Error', err);
+//     })
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded())

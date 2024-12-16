@@ -46,7 +46,6 @@ const verifyToken = (token, publicKey) => {
         algorithm: 'RS256'
     }, (err, decoded) => {
         if (err) {
-            console.log('lỗi decode', err);
             return {
                 code: '40002',
                 message: 'Token khoong hợp lệ',

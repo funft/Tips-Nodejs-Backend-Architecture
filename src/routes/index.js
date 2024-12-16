@@ -10,6 +10,7 @@ routes.use(apiKey)
 // check permission
 routes.use(checkPermission('0000'))
 
+routes.use('/comment', require('./comment/index'));
 routes.use('/inventory', require('./inventory/index'));
 routes.use('/discount', require('./discount/index'));
 routes.use('/checkout', require('./checkout/index'));
