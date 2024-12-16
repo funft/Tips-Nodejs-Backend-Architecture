@@ -2,6 +2,7 @@
 
 const { NotFoundError } = require("../core/error.response")
 const commentModel = require("../models/comment.model")
+const { product } = require("../models/product.model")
 const { convertToObjectIdMongoDb, checkExistRecord } = require("../utils/index")
 /*
     add comment [User, Shop]
@@ -97,6 +98,40 @@ class CommentService {
                 comment_left: 1
             })
         return comments
+    }
+
+    static async deleteComment({ commentId, productId }) {
+        const foundComment = await commentModel.findOne({
+            _id: convertToObjectIdMongoDb(commentId)
+        })
+        if (!foundComment) throw new NotFoundError('Comment not found')
+        const foundProduct = await product.findOne({
+            _id: convertToObjectIdMongoDb(productId)
+        })
+        if (!foundProduct) throw new NotFoundError('Product not found')
+        const rightValue = foundComment.comment_right
+        const leftValue = foundComment.comment_left
+        const width = rightValue - leftValue + 1
+
+        await commentModel.deleteMany({
+            comment_productId: convertToObjectIdMongoDb(productId),
+            comment_left: { $gte: leftValue, $lte: rightValue }
+        })
+
+        await commentModel.updateMany({
+            comment_productId: convertToObjectIdMongoDb(productId),
+            comment_left: { $gt: rightValue }
+        }, {
+            $inc: { comment_left: -width }
+        })
+
+        await commentModel.updateMany({
+            comment_productId: convertToObjectIdMongoDb(productId),
+            comment_right: { $gt: rightValue }
+        }, {
+            $inc: { comment_right: -width }
+        })
+        return null
     }
 }
 module.exports = CommentService
