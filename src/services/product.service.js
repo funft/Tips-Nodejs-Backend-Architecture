@@ -4,7 +4,7 @@ const { BadRequestError, ForbiddenError } = require('../core/error.response')
 const { findAllDraftForShop, publishProduct, unPublishProduct, findAllPublishedForShop, searchProductByUser, findAllProducts, findProductById, updateProduct, updateDetailProduct } = require('../models/repositories/product.repo')
 const { bodyUpdateParser } = require('../utils')
 const { insertInventory } = require('../models/repositories/inventory.repo')
-
+const { pushNotiToSystem } = require('../services/notification.service')
 class ProductFactory {
     static ProductTypes = {}
     static registryProductType(type, classRef) {
@@ -78,6 +78,18 @@ class Product {
                 shopId: this.product_shop
             })
         }
+
+        // push notification
+        pushNotiToSystem({
+            type: 'SHOP-001',
+            senderId: this.product_shop,
+            receiverId: 1, // đáng lý nên lấy danh sách user follow shop
+            options: {
+                product_name: newProduct.product_name,
+                shop_name: newProduct.product_shop
+            }
+        }).then(rs => console.log('pushNotiToSystem', rs))
+            .catch(err => console.log('pushNotiToSystem', err))
 
         return newProduct
     }
