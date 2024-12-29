@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "amqplib": "^0.10.5",
     "bcryptjs": "^2.4.3",
     "crypto": "^1.0.1",
     "crypto-js": "^4.2.0",
